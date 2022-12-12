@@ -1,4 +1,4 @@
-package Chat;
+package Package;
 
 import javax.crypto.Cipher;
 import java.security.KeyPair;
@@ -22,15 +22,15 @@ public class RSA {
         }
     }
 
-    public String encode(byte[] data) {
+    private String encode(byte[] data) {
         return Base64.getEncoder().encodeToString(data);
     }
 
-    public byte[] decode(String data) {
+    private byte[] decode(String data) {
         return Base64.getDecoder().decode(data);
     }
 
-    public String encrypt(String letter) throws Exception {
+    public String encrypt(String letter, PublicKey publicKey) throws Exception {
         byte[] letterToBytes = letter.getBytes();
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
@@ -38,7 +38,7 @@ public class RSA {
         return encode(encryptedBytes);
     }
 
-    public String decrypt(String encryptedLetter) throws Exception {
+    public String decrypt(String encryptedLetter, PrivateKey privateKey) throws Exception {
         byte[] encryptedBytes = decode(encryptedLetter);
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.DECRYPT_MODE, privateKey);

@@ -6,6 +6,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Scanner;
 
+
 import Package.*;
 
 public class Chat {
@@ -15,74 +16,95 @@ public class Chat {
 
     private Socket socket = null;
 
-//    private BufferedReader reader;
-//    private BufferedWriter writer;
-
     private ObjectInputStream reader;
     private ObjectOutputStream writer;
 
-    private String inMessage;
-    private String outMessage;
+    private Message inMessage;
+    private Message outMessage;
 
     private RSA rsa;
-    private PrivateKey privateKeyClient;
+    private PrivateKey privateKey;
     private PublicKey publicKey;
 
     private PublicKey publicKeyServer;
 
-    private BasePackage pkg;
 
     public Chat() {
         rsa = new RSA();
-        privateKeyClient = rsa.getPrivateKey();
+        privateKey = rsa.getPrivateKey();
         publicKey = rsa.getPublicKey();
     }
 
     public void connect() throws IOException {
         this.socket = new Socket(IP_ADD, PORT);
-        System.out.println("New socket");
 
         this.writer = new ObjectOutputStream(socket.getOutputStream());
-        System.out.println("New writer");
-
         this.reader = new ObjectInputStream(socket.getInputStream());
-        System.out.println("New reader");
 
         System.out.println("Connected to server");
-    }
-
-    private void sendPackage(BasePackage pack) {
-        try {
-            writer.writeObject(pack);
-            writer.flush();
-        } catch (IOException e) {
-        }
     }
 
     public void run() {
         exchangeKeys();
 
         while (true) {
-        }
+            try {
+                inMessage = (Message) reader.readObject();
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            }
 
+            if (!inMessage.getValue().equals("")) {
+                try {
+                    inMessage.setValue(rsa.decrypt(inMessage.getValue(), privateKey));
+                } catch (Exception e) {
+                }
+                System.out.println(inMessage.toString());
+                inMessage.setValue("");
+            } else {
+                System.out.println("NON");
+            }
+
+            try {
+                System.out.print("Input message: ");
+                String tmp = sc.nextLine();
+
+                outMessage = new Message(tmp);
+                sendMessage(outMessage, publicKeyServer);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void exchangeKeys() {
         try {
-            pkg = (BasePackage) reader.readObject();
-            this.publicKeyServer = (PublicKey) pkg.getObj();
-            System.out.println("Server public key:\n" + publicKeyServer.toString());
+            inMessage = (Message) reader.readObject();
+            this.publicKeyServer = (PublicKey) inMessage.getObj();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         try {
-            pkg = new BasePackage(this.publicKey);
+            outMessage = new Message(this.publicKey);
 
-            writer.writeObject(pkg);
+            writer.writeObject(outMessage);
             writer.flush();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void sendMessage(Message msg, PublicKey serverPublicKey) {
+        try {
+            msg.setValue(rsa.encrypt(msg.getValue(), serverPublicKey));
+            writer.writeObject(msg);
+            writer.flush();
+        } catch (IOException e) {
+            System.out.println("Cannot send package");
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("Failed to encrypt message");
         }
     }
 

@@ -5,6 +5,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
+import Package.*;
+
 public class Server {
     private final int PORT = 8721;
 
@@ -37,5 +39,16 @@ public class Server {
 
     public void removeClient(ClientHandler client) {
         allClients.remove(client);
+    }
+
+    public void sendMessageToAllUsers(Message msg, ClientHandler self) {
+        for (ClientHandler client : allClients) {
+//            if (client != self) {
+//                System.out.println("SERVER DEBUG: Trying send message to all users");
+//
+//                client.sendMessage(msg);
+//            }
+            client.sendMessage(msg);
+        }
     }
 }

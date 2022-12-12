@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.Socket;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.HexFormat;
 
 import Package.*;
 
@@ -19,7 +20,9 @@ public class ClientHandler implements Runnable {
     private PublicKey publicKeyClient;
     private PublicKey publicKey;
     private PrivateKey privateKey;
-    private BasePackage pkg;
+
+    private Message inMessage;
+    private Message outMessage;
 
     public ClientHandler(Socket socket, Server server) {
         rsa = new RSA();
@@ -46,13 +49,15 @@ public class ClientHandler implements Runnable {
         System.out.println("SERVER DEBUG: Connected new user: " + socket.getInetAddress() + " : " + socket.getPort());
         exchangePublicKeys();
 
+        outMessage = new Message("Hello");
+        sendMessage(outMessage);
+
         while (true) {
             try {
-                pkg = (BasePackage) reader.readObject();
-
+                inMessage = (Message) reader.readObject();
             } catch (EOFException e) {
                 System.out.println("SERVER DEBUG: Diconected: " + socket.getInetAddress() + " : " + socket.getPort());
-                e.printStackTrace();
+                server.removeClient(this);
                 break;
             } catch (NullPointerException e) {
                 e.printStackTrace();
@@ -62,29 +67,52 @@ public class ClientHandler implements Runnable {
                 System.out.println("Класс найти не могет");
             }
 
-            if (!pkg.getValue().equals("")) {
-                System.out.println(pkg.getValue());
+            if (!inMessage.getValue().equals("")) {
+                try {
+                    inMessage.setValue(rsa.decrypt(inMessage.getValue(), privateKey));
+                    System.out.println(inMessage.toString());
+                    server.sendMessageToAllUsers(inMessage, this);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                } finally {
+                    inMessage.setValue("");
+                }
             }
 
-            pkg.setValue("");
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     private void exchangePublicKeys() {
-        pkg = new BasePackage(publicKey);
-
+        inMessage = new Message(publicKey);
         try {
-            writer.writeObject(pkg);
+            writer.writeObject(inMessage);
             writer.flush();
         } catch (IOException e) {
             System.out.println("SERVER DEBUG: Cannot send public key");
         }
 
         try {
-            pkg = (BasePackage) reader.readObject();
-            this.publicKeyClient = (PublicKey) pkg.getObj();
-            System.out.println("SERVER DEBUG: Client public key:\n" + this.publicKeyClient.toString());
+            inMessage = (Message) reader.readObject();
+            this.publicKeyClient = (PublicKey) inMessage.getObj();
         } catch (Exception e) {
+        }
+    }
+
+    public void sendMessage(Message msg) {
+        try {
+            msg.setValue(rsa.encrypt(msg.getValue(), publicKeyClient));
+            writer.writeObject(msg);
+            writer.flush();
+        } catch (IOException e) {
+            System.out.println("SERVER DEBUG: Cannot send package to " + socket.getInetAddress() + " : " + socket.getPort());
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("SERVER DEBUG: Failed to encrypt message");
         }
     }
 }

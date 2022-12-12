@@ -1,17 +1,16 @@
 package Package;
 
-import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class BasePackage implements Serializable {
+public class Message implements Serializable {
     protected String value;
     protected String sendingTime;
     protected Object obj;
     protected int id;
     static int ID;
 
-    public BasePackage(String value) {
+    public Message(String value) {
         this.value = value;
         this.sendingTime = LocalDateTime.now().toString();
         this.id = ID;
@@ -19,7 +18,7 @@ public class BasePackage implements Serializable {
         ++ID;
     }
 
-    public BasePackage(Object obj) {
+    public Message(Object obj) {
         this.obj = obj;
         this.value = "";
         this.sendingTime = LocalDateTime.now().toString();
