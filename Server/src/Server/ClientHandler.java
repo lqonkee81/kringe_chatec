@@ -4,25 +4,25 @@ import java.io.*;
 import java.net.Socket;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.HexFormat;
 
 import Package.*;
 
 public class ClientHandler implements Runnable {
+    private Socket socket;
     private Server server;
-    private RSA rsa;
 
     private ObjectOutputStream writer;
     private ObjectInputStream reader;
 
-    private Socket socket;
 
+    private RSA rsa;
     private PublicKey publicKeyClient;
     private PublicKey publicKey;
     private PrivateKey privateKey;
 
     private Message inMessage;
     private Message outMessage;
+    private String nickname;
 
     public ClientHandler(Socket socket, Server server) {
         rsa = new RSA();
@@ -48,8 +48,9 @@ public class ClientHandler implements Runnable {
     public void run() {
         System.out.println("SERVER DEBUG: Connected new user: " + socket.getInetAddress() + " : " + socket.getPort());
         exchangePublicKeys();
+        preparing();
 
-        outMessage = new Message("Hello");
+        outMessage = new Message("Hello", nickname);
         sendMessage(outMessage);
 
         while (true) {
@@ -87,6 +88,18 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    private void preparing() {
+        try {
+            inMessage = (Message) reader.readObject();
+            this.nickname = inMessage.getNickname();
+
+        } catch (EOFException e) {
+            e.printStackTrace();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void exchangePublicKeys() {
         inMessage = new Message(publicKey);
         try {
@@ -100,12 +113,14 @@ public class ClientHandler implements Runnable {
             inMessage = (Message) reader.readObject();
             this.publicKeyClient = (PublicKey) inMessage.getObj();
         } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
     public void sendMessage(Message msg) {
         try {
             msg.setValue(rsa.encrypt(msg.getValue(), publicKeyClient));
+            msg.setAuthor(nickname);
             writer.writeObject(msg);
             writer.flush();
         } catch (IOException e) {

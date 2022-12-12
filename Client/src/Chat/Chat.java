@@ -23,13 +23,15 @@ public class Chat {
     private Message outMessage;
 
     private RSA rsa;
-    private PrivateKey privateKey;
-    private PublicKey publicKey;
-
+    private final PrivateKey privateKey;
+    private final PublicKey publicKey;
     private PublicKey publicKeyServer;
 
+    private String nickname;
 
-    public Chat() {
+
+    public Chat(String nickname) {
+        this.nickname = nickname;
         rsa = new RSA();
         privateKey = rsa.getPrivateKey();
         publicKey = rsa.getPublicKey();
@@ -46,6 +48,7 @@ public class Chat {
 
     public void run() {
         exchangeKeys();
+        preparing();
 
         while (true) {
             try {
@@ -74,6 +77,15 @@ public class Chat {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private void preparing() {
+        try {
+            outMessage = new Message("", nickname);
+            sendMessage(outMessage, publicKeyServer);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

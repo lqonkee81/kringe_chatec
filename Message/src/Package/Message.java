@@ -4,14 +4,16 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 public class Message implements Serializable {
+    protected String author;
     protected String value;
     protected String sendingTime;
     protected Object obj;
     protected int id;
     static int ID;
 
-    public Message(String value) {
+    public Message(String value, String author) {
         this.value = value;
+        this.author = author;
         this.sendingTime = LocalDateTime.now().toString();
         this.id = ID;
         this.obj = null;
@@ -39,6 +41,14 @@ public class Message implements Serializable {
     }
 
     public String toString() {
-        return "{" + sendingTime + "}: " + id + " -> " + value;
+        return "{" + author + " " + sendingTime + "}: " + " -> " + value;
+    }
+
+    public String getNickname() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
     }
 }
