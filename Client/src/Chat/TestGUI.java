@@ -1,9 +1,14 @@
 package Chat;
 
+import javax.accessibility.AccessibleTable;
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
 import java.io.StreamCorruptedException;
+import java.net.SocketException;
 import java.util.TreeMap;
 
 import Package.*;
@@ -11,11 +16,13 @@ import Package.*;
 public class TestGUI extends JFrame {
     private Chat chat;
 
+    private File icon = new File("./resources/chat_icon_preview.png");
     private JTextArea sendingMessageField;  // Поле для ввода отправляемого сообщения
     private JTextArea messagesOutArea;      // Поле в которое прилетают сообщения с сервера ( лог переписки )
 
     private JButton btnAutorize;            // Кнопка атворизации/регистрации
     private JButton btnSendMessage;          // Кнопка отправки сообщения
+    private JButton btnDisconect;
 
     JScrollPane scrollPaneMessagesOutArea;  // Скрол для поля с логом переписки
 
@@ -43,6 +50,10 @@ public class TestGUI extends JFrame {
         /*============== Задаём настройки главного окна ==============*/
         this.setBounds((screenWight / 2) - (wight / 2), (screenHeight / 2) - (height / 2), wight, height);
         this.setTitle("Client");
+        try {
+            this.setIconImage(ImageIO.read(icon));
+        } catch (IOException e) {
+        }
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
 
@@ -58,6 +69,8 @@ public class TestGUI extends JFrame {
         bottomPanel = new JPanel(new BorderLayout());
         btnSendMessage = new JButton("Отправить");
         btnAutorize = new JButton("Авторизация");
+        btnDisconect = new JButton("Отключиться от сервера");
+
         sendingMessageField = new JTextArea("Сообщение: ");
 
         bottomPanel.add(btnSendMessage, BorderLayout.EAST);
@@ -70,6 +83,7 @@ public class TestGUI extends JFrame {
         this.setVisible(true);
 
 
+        /*============== Вызываем авторизацию пользователя и запускаем прослушивание сообщений ==============*/
         btnAutorize.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -120,6 +134,8 @@ public class TestGUI extends JFrame {
                                         msg = chat.getMessage();
                                         messagesOutArea.append(msg.toString() + "\n");
                                     } catch (NullPointerException | StreamCorruptedException ignored) {
+                                    } catch (SocketException e) {
+                                        break;
                                     } catch (Exception e) {
                                         e.printStackTrace();
                                     }
@@ -128,7 +144,8 @@ public class TestGUI extends JFrame {
                         }).start();
                     }
                 });
-                btnAutorize.setVisible(false);
+                bottomPanel.remove(btnAutorize);
+                bottomPanel.add(btnDisconect, BorderLayout.WEST);
             }
         });
 
@@ -141,6 +158,13 @@ public class TestGUI extends JFrame {
                     chat.sendMessage(msg);
                     sendingMessageField.setText("Сообщение: ");
                 }
+            }
+        });
+
+        btnDisconect.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                chat.disconnect();
             }
         });
 

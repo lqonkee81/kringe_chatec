@@ -2,6 +2,7 @@ package Chat;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Scanner;
@@ -83,6 +84,8 @@ public class Chat {
             msg.setValue(rsa.encrypt(msg.getValue(), publicKeyServer));
             writer.writeObject(msg);
             writer.flush();
+        } catch (SocketException e) {
+            System.out.println("Ты не подлючен, дэбил!");
         } catch (IOException e) {
             System.out.println("Cannot send package");
             e.printStackTrace();
@@ -91,7 +94,7 @@ public class Chat {
         }
     }
 
-    public Message getMessage() throws Exception {
+    public Message getMessage() throws Exception, SocketException {
         inMessage = (Message) reader.readObject();
         if (!inMessage.getValue().equals("")) {
             inMessage.setValue(rsa.decrypt(inMessage.getValue(), privateKey));
@@ -99,7 +102,6 @@ public class Chat {
         }
         return null;
     }
-
 
     public void disconnect() {
         try {
