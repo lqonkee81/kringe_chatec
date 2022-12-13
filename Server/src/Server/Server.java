@@ -41,13 +41,9 @@ public class Server {
         allClients.remove(client);
     }
 
-    public void sendMessageToAllUsers(Message msg, ClientHandler self) {
+    public void sendMessageToAllUsers(Message msg) {
         for (ClientHandler client : allClients) {
-            if (client != self) {
-                System.out.println("SERVER DEBUG: Trying send message to all users");
-
-                client.sendMessage(msg);
-            }
+            client.sendMessage(msg);
         }
     }
 }

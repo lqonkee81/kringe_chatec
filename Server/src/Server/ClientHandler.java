@@ -72,7 +72,7 @@ public class ClientHandler implements Runnable {
                 try {
                     inMessage.setValue(rsa.decrypt(inMessage.getValue(), privateKey));
                     System.out.println(inMessage.toString());
-                    server.sendMessageToAllUsers(inMessage, this);
+                    server.sendMessageToAllUsers(inMessage);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 } finally {

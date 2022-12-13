@@ -72,7 +72,7 @@ public class Chat {
                 System.out.print("Input message: ");
                 String tmp = sc.nextLine();
 
-                outMessage = new Message(tmp);
+                outMessage = new Message(tmp, nickname);
                 sendMessage(outMessage, publicKeyServer);
             } catch (Exception e) {
                 e.printStackTrace();
