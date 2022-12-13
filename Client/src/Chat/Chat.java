@@ -94,7 +94,6 @@ public class Chat {
     public Message getMessage() throws Exception {
         inMessage = (Message) reader.readObject();
         if (!inMessage.getValue().equals("")) {
-            System.out.println("get message");
             inMessage.setValue(rsa.decrypt(inMessage.getValue(), privateKey));
             return inMessage;
         }

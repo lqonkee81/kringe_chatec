@@ -41,7 +41,7 @@ public class Message implements Serializable {
     }
 
     public String toString() {
-        return "{" + author + " " + sendingTime + "}: " + " -> " + value;
+        return "[" + sendingTime + "] " + author + ": " + " -> " + value;
     }
 
     public String getNickname() {

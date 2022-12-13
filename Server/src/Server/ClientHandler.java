@@ -51,8 +51,7 @@ public class ClientHandler implements Runnable {
         exchangePublicKeys();
         preparing();
 
-        outMessage = new Message("Hello", nickname);
-        sendMessage(outMessage);
+        sayHello();
 
         while (true) {
             try {
@@ -113,6 +112,21 @@ public class ClientHandler implements Runnable {
             this.publicKeyClient = (PublicKey) inMessage.getObj();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void sayHello() {
+        Message msg = new Message("Hello", "");
+        try {
+            msg.setValue(rsa.encrypt(msg.getValue(), publicKeyClient));
+            msg.setAuthor("Server");
+            writer.writeObject(msg);
+            writer.flush();
+        } catch (IOException e) {
+            System.out.println("SERVER DEBUG: Cannot send package to " + socket.getInetAddress() + " : " + socket.getPort());
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("SERVER DEBUG: Failed to encrypt message");
         }
     }
 

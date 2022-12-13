@@ -120,7 +120,7 @@ public class TestGUI extends JFrame {
                                 while (true) {
                                     try {
                                         msg = chat.getMessage();
-                                        messagesOutArea.setText(msg.toString());
+                                        messagesOutArea.append(msg.toString() + "\n");
                                     } catch (NullPointerException | StreamCorruptedException ignored) {}
                                     catch (Exception e) {
                                         e.printStackTrace();
@@ -128,10 +128,9 @@ public class TestGUI extends JFrame {
                                 }
                             }
                         }).start();
-
-
                     }
                 });
+                btnAutorize.setVisible(false);
             }
         });
 
