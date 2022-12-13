@@ -116,7 +116,7 @@ public class ClientHandler implements Runnable {
     }
 
     private void sayHello() {
-        Message msg = new Message("Hello", "");
+        Message msg = new Message("Hello, " + nickname, "");
         try {
             msg.setValue(rsa.encrypt(msg.getValue(), publicKeyClient));
             msg.setAuthor("Server");

@@ -58,7 +58,7 @@ public class TestGUI extends JFrame {
         bottomPanel = new JPanel(new BorderLayout());
         btnSendMessage = new JButton("Отправить");
         btnAutorize = new JButton("Авторизация");
-        sendingMessageField = new JTextArea("Введите ваше сообщение: ");
+        sendingMessageField = new JTextArea("Сообщение: ");
 
         bottomPanel.add(btnSendMessage, BorderLayout.EAST);
         bottomPanel.add(sendingMessageField, BorderLayout.CENTER);
@@ -68,8 +68,6 @@ public class TestGUI extends JFrame {
         this.add(scrollPaneMessagesOutArea, BorderLayout.CENTER);
         this.add(bottomPanel, BorderLayout.SOUTH);
         this.setVisible(true);
-
-
 
 
         btnAutorize.addActionListener(new ActionListener() {
@@ -121,8 +119,8 @@ public class TestGUI extends JFrame {
                                     try {
                                         msg = chat.getMessage();
                                         messagesOutArea.append(msg.toString() + "\n");
-                                    } catch (NullPointerException | StreamCorruptedException ignored) {}
-                                    catch (Exception e) {
+                                    } catch (NullPointerException | StreamCorruptedException ignored) {
+                                    } catch (Exception e) {
                                         e.printStackTrace();
                                     }
                                 }
@@ -137,8 +135,12 @@ public class TestGUI extends JFrame {
         btnSendMessage.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Message msg = new Message(sendingMessageField.getText(), nickname);
-                chat.sendMessage(msg);
+                if (!sendingMessageField.getText().equals("") &&
+                        !sendingMessageField.getText().equals("Сообщение: ")) {
+                    Message msg = new Message(sendingMessageField.getText(), nickname);
+                    chat.sendMessage(msg);
+                    sendingMessageField.setText("Сообщение: ");
+                }
             }
         });
 
