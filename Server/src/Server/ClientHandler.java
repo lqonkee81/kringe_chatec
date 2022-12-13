@@ -2,6 +2,7 @@ package Server;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
@@ -56,13 +57,11 @@ public class ClientHandler implements Runnable {
         while (true) {
             try {
                 inMessage = (Message) reader.readObject();
-            } catch (EOFException e) {
+            } catch (EOFException | SocketException e) {
                 System.out.println("SERVER DEBUG: Diconected: " + socket.getInetAddress() + " : " + socket.getPort());
                 server.removeClient(this);
                 break;
-            } catch (NullPointerException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
+            } catch (NullPointerException | IOException e) {
                 e.printStackTrace();
             } catch (ClassNotFoundException e) {
                 System.out.println("Класс найти не могет");

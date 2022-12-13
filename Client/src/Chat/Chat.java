@@ -49,41 +49,12 @@ public class Chat {
     public void run() {
         exchangeKeys();
         preparing();
-
-        while (true) {
-            try {
-                inMessage = (Message) reader.readObject();
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-
-            if (!inMessage.getValue().equals("")) {
-                try {
-                    inMessage.setValue(rsa.decrypt(inMessage.getValue(), privateKey));
-                } catch (Exception e) {
-                }
-                System.out.println(inMessage.toString());
-                inMessage.setValue("");
-            } else {
-                System.out.println("NON");
-            }
-
-            try {
-                System.out.print("Input message: ");
-                String tmp = sc.nextLine();
-
-                outMessage = new Message(tmp, nickname);
-                sendMessage(outMessage, publicKeyServer);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     private void preparing() {
         try {
             outMessage = new Message("", nickname);
-            sendMessage(outMessage, publicKeyServer);
+            sendMessage(outMessage);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -107,9 +78,9 @@ public class Chat {
         }
     }
 
-    private void sendMessage(Message msg, PublicKey serverPublicKey) {
+    public void sendMessage(Message msg) {
         try {
-            msg.setValue(rsa.encrypt(msg.getValue(), serverPublicKey));
+            msg.setValue(rsa.encrypt(msg.getValue(), publicKeyServer));
             writer.writeObject(msg);
             writer.flush();
         } catch (IOException e) {
@@ -119,6 +90,17 @@ public class Chat {
             System.out.println("Failed to encrypt message");
         }
     }
+
+    public Message getMessage() throws Exception {
+        inMessage = (Message) reader.readObject();
+        if (!inMessage.getValue().equals("")) {
+            System.out.println("get message");
+            inMessage.setValue(rsa.decrypt(inMessage.getValue(), privateKey));
+            return inMessage;
+        }
+        return null;
+    }
+
 
     public void disconnect() {
         try {
