@@ -11,8 +11,8 @@ import java.util.Scanner;
 import Package.*;
 
 public class Chat {
-    private final int PORT = 8721;
-    private final String IP_ADD = "127.0.0.1";
+    private int PORT ;
+    private String IP_ADD;
     private final Scanner sc = new Scanner(System.in);
 
     private Socket socket = null;
@@ -31,8 +31,11 @@ public class Chat {
     private String nickname;
 
 
-    public Chat(String nickname) {
+    public Chat(String nickname, String ip_add, int PORT) {
+        this.PORT = PORT;
+        this.IP_ADD = ip_add;
         this.nickname = nickname;
+
         rsa = new RSA();
         privateKey = rsa.getPrivateKey();
         publicKey = rsa.getPublicKey();

@@ -32,6 +32,9 @@ public class TestGUI extends JFrame {
     private String nickname;
     private char[] password;
 
+    private String ip_add;
+    private int PORT;
+
 
     public void setTextArea(Message msg) {
         this.messagesOutArea.setText(msg.toString());
@@ -88,8 +91,10 @@ public class TestGUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 JFrame f = new JFrame("Autorize");
-                JTextField loginField = new JTextField();
-                JPasswordField passwordField = new JPasswordField();
+                JTextField loginField = new JTextField("login");
+                JPasswordField passwordField = new JPasswordField("password");
+                JTextField ipAdd = new JTextField("IP");
+                JTextField port = new JTextField("port");
                 JButton btnOk = new JButton("ok");
 
                 GridLayout gridLayout = new GridLayout(3, 1, 15, 15);
@@ -103,6 +108,8 @@ public class TestGUI extends JFrame {
 
                 container.add(loginField);
                 container.add(passwordField);
+                container.add(ipAdd);
+                container.add(port);
                 container.add(btnOk);
 
                 f.setVisible(true);
@@ -113,12 +120,15 @@ public class TestGUI extends JFrame {
                         nickname = loginField.getText();
                         password = passwordField.getPassword();
 
-                        chat = new Chat(nickname);
+                        ip_add = ipAdd.getText();
+                        PORT = Integer.parseInt(port.getText());
+
+                        chat = new Chat(nickname, ip_add, PORT);
                         try {
                             chat.connect();
                             chat.run();
                         } catch (Exception ex) {
-                            System.out.println("Cannot connect to servcer");
+                            System.out.println("Cannot connect to server");
                             ex.printStackTrace();
                         }
                         f.setVisible(false);
