@@ -1,13 +1,23 @@
 package Package;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.security.auth.login.AccountLockedException;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Date;
 
-public class Message implements Serializable {
+public class Message implements Serializable, Cloneable {
     protected String author;
     protected String value;
+    protected String sendingTime;
     protected Object obj;
     protected int id;
     static int ID;
@@ -15,18 +25,16 @@ public class Message implements Serializable {
     public Message(String value, String author) {
         this.value = value;
         this.author = author;
-//        this.sendingTime = this.generateTime();
         this.id = ID;
-        this.obj = null;
+        this.sendingTime = generateTime();
         ++ID;
     }
 
-    public Message(Object obj) {
-        this.obj = obj;
-        this.value = "";
-//        this.sendingTime = this.generateTime();
-        this.id = ID;
-        ++ID;
+    public Message(Message msg) {
+        this.value = msg.value;
+        this.author = msg.author;
+        this.id = msg.id;
+        this.sendingTime = msg.sendingTime;
     }
 
     private String generateTime() {
@@ -40,6 +48,14 @@ public class Message implements Serializable {
         this.value = value;
     }
 
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public void setSendingTime(String sendingTime) {
+        this.sendingTime = sendingTime;
+    }
+
     public String getValue() {
         return value;
     }
@@ -48,22 +64,23 @@ public class Message implements Serializable {
         return this.obj;
     }
 
+    public String getAuthor() {
+        return author;
+    }
+
+    public String getSendingTime() {
+        return sendingTime;
+    }
+
     public String toString() {
-//        return "[" + sendingTime + "] " + author + ": " + " -> " + value;
-        return "[" + generateTime() + "] " + author + ": " + " -> " + value;
+        return "[" + sendingTime + "] " + author + ": " + " -> " + value;
     }
 
     public String getNickname() {
         return author;
     }
 
-    public void setAuthor(String author) {
-        this.author = author;
+    public Message clone() throws CloneNotSupportedException {
+        return (Message) super.clone();
     }
 }
-/*
-        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm");
-        Date date = new Date(System.currentTimeMillis());
-        String format_date = formatter.format(date); // Уже отформатированное время и дата
-
-* */

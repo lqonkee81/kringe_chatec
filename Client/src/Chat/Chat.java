@@ -11,7 +11,7 @@ import java.util.Scanner;
 import Package.*;
 
 public class Chat {
-    private int PORT ;
+    private int PORT;
     private String IP_ADD;
     private final Scanner sc = new Scanner(System.in);
 
@@ -44,8 +44,8 @@ public class Chat {
     public void connect() throws IOException {
         this.socket = new Socket(IP_ADD, PORT);
 
-        this.writer = new ObjectOutputStream(socket.getOutputStream());
-        this.reader = new ObjectInputStream(socket.getInputStream());
+        this.writer = new ObjectOutputStream(socket.getOutputStream()); // Поток для отправки пакета
+        this.reader = new ObjectInputStream(socket.getInputStream());   // Поток для чтения пакета
 
         System.out.println("Connected to server");
     }
@@ -56,6 +56,10 @@ public class Chat {
     }
 
     private void preparing() {
+        /*
+         * Отпровка серверу никнейма пользователя
+         */
+
         try {
             outMessage = new Message("", nickname);
             sendMessage(outMessage);
@@ -65,17 +69,25 @@ public class Chat {
     }
 
     private void exchangeKeys() {
+        /*
+         * Обмен публичными ключами с сервером
+         *
+         * Сначала клиент получает публичный ключ сервера
+         * Затем отправляет свой
+         */
         try {
-            inMessage = (Message) reader.readObject();
-            this.publicKeyServer = (PublicKey) inMessage.getObj();
+//            inMessage = (Message) reader.readObject();
+            this.publicKeyServer = (PublicKey) reader.readObject();
+            System.out.println("Getting public key from server");
+            System.out.println(publicKeyServer.toString());
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         try {
-            outMessage = new Message(this.publicKey);
+//            outMessage = new Message(this.publicKey);
 
-            writer.writeObject(outMessage);
+            writer.writeObject(publicKey);
             writer.flush();
         } catch (Exception e) {
             e.printStackTrace();
@@ -83,8 +95,11 @@ public class Chat {
     }
 
     public void sendMessage(Message msg) {
+        /*
+         * Отправка пакета серверу
+         */
         try {
-            msg.setValue(rsa.encrypt(msg.getValue(), publicKeyServer));
+            msg = rsa.encrypt(msg, publicKeyServer);
             writer.writeObject(msg);
             writer.flush();
         } catch (SocketException e) {
@@ -97,10 +112,10 @@ public class Chat {
         }
     }
 
-    public Message getMessage() throws Exception, SocketException {
+    public Message getMessage() throws Exception {
         inMessage = (Message) reader.readObject();
         if (!inMessage.getValue().equals("")) {
-            inMessage.setValue(rsa.decrypt(inMessage.getValue(), privateKey));
+            inMessage = rsa.decrypt(inMessage, privateKey);
             return inMessage;
         }
         return null;

@@ -10,20 +10,20 @@ import Package.*;
 
 public class ClientHandler implements Runnable {
     private Socket socket;
-    private Server server;
+    private Server server;              // Объект запущенного сервера ( используеься только для ретрансляции полученного пакета всем пользователям )
 
-    private ObjectOutputStream writer;
-    private ObjectInputStream reader;
+    private ObjectOutputStream writer;  // Поток для отправки пакета пользователю
+    private ObjectInputStream reader;   // Поток для чтения полученного пакета от пользователя
 
 
-    private RSA rsa;
-    private PublicKey publicKeyClient;
-    private PublicKey publicKey;
-    private PrivateKey privateKey;
+    private RSA rsa;                    // Шифрование
+    private PublicKey publicKeyClient;  // Публичный ключ полученный от клиента
+    private PublicKey publicKey;        // Публичный ключ сервера
+    private PrivateKey privateKey;      // Приватный ключ сервера
 
-    private Message inMessage;
-    private Message outMessage;
-    private String nickname;
+    private Message inMessage;          // Полученный пакет от пользователя
+    private Message outMessage;         // Отправляемый пакет пользвателю ( не используется )
+    private String nickname;            // Ник пользователя
 
     public ClientHandler(Socket socket, Server server) {
         rsa = new RSA();
@@ -47,10 +47,13 @@ public class ClientHandler implements Runnable {
 
     @Override
     public void run() {
+        /*
+         * Переобределение этого метода необходимо для того, чтобы каждый клиент обслуживался в отдельном потоке
+         */
+
         System.out.println("SERVER DEBUG: Connected new user: " + socket.getInetAddress() + " : " + socket.getPort());
         exchangePublicKeys();
         preparing();
-
         sayHello();
 
         while (true) {
@@ -68,7 +71,7 @@ public class ClientHandler implements Runnable {
 
             if (!inMessage.getValue().equals("")) {
                 try {
-                    inMessage.setValue(rsa.decrypt(inMessage.getValue(), privateKey));
+                    inMessage = rsa.decrypt(inMessage, privateKey);
                     System.out.println(inMessage.toString());
                     server.sendMessageToAllUsers(inMessage);
                 } catch (Exception e) {
@@ -87,39 +90,53 @@ public class ClientHandler implements Runnable {
     }
 
     private void preparing() {
+        /*
+         * Тут серверу прилдетает никнейм пользователя
+         */
+
         try {
             inMessage = (Message) reader.readObject();
+            inMessage = rsa.decrypt(inMessage, privateKey);
             this.nickname = inMessage.getNickname();
 
-        } catch (EOFException e) {
-            e.printStackTrace();
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     private void exchangePublicKeys() {
-        inMessage = new Message(publicKey);
+        /*
+         * Обмен публичными ключами пользователя с сервером
+         *
+         * Сначала сервер отправляет свой ключ. Затем принимает ключ пользователя
+         */
+
+//        inMessage = new Message(publicKey);
         try {
-            writer.writeObject(inMessage);
+            writer.writeObject(publicKey);
             writer.flush();
         } catch (IOException e) {
             System.out.println("SERVER DEBUG: Cannot send public key");
         }
 
         try {
-            inMessage = (Message) reader.readObject();
-            this.publicKeyClient = (PublicKey) inMessage.getObj();
+//            inMessage = (Message) reader.readObject();
+            this.publicKeyClient = (PublicKey) reader.readObject();
+            System.out.println("Getting public key from klient");
+            System.out.println(publicKeyClient.toString());
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     private void sayHello() {
-        Message msg = new Message("Hello, " + nickname, "");
+        /*
+         * Тут просто сервер говорит пользователю 'Hello' в качестве подтверждения, что соединение установлено
+         */
+
+        Message msg = new Message("Hi, " + nickname, "Server");
         try {
-            msg.setValue(rsa.encrypt(msg.getValue(), publicKeyClient));
-            msg.setAuthor("Server");
+            msg = rsa.encrypt(msg, publicKeyClient);
             writer.writeObject(msg);
             writer.flush();
         } catch (IOException e) {
@@ -127,13 +144,17 @@ public class ClientHandler implements Runnable {
             e.printStackTrace();
         } catch (Exception e) {
             System.out.println("SERVER DEBUG: Failed to encrypt message");
+            e.printStackTrace();
         }
     }
 
     public void sendMessage(Message msg) {
+        /*
+         * Отправка сообщение пользователю
+         */
+
         try {
-            msg.setValue(rsa.encrypt(msg.getValue(), publicKeyClient));
-            msg.setAuthor(nickname);
+            msg = rsa.encrypt(msg, publicKeyClient);
             writer.writeObject(msg);
             writer.flush();
         } catch (IOException e) {
@@ -141,6 +162,7 @@ public class ClientHandler implements Runnable {
             e.printStackTrace();
         } catch (Exception e) {
             System.out.println("SERVER DEBUG: Failed to encrypt message");
+            e.printStackTrace();
         }
     }
 }
